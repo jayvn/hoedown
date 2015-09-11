@@ -2429,6 +2429,66 @@ parse_table(
 }
 
 /* parse_block • parsing of one block, returning next uint8_t to parse */
+static void parse_block(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t size)
+{
+	size_t beg, end, i;
+	uint8_t *txt_data;
+	beg = 0;
+
+	if (doc->work_bufs[BUFFER_SPAN].size +
+		doc->work_bufs[BUFFER_BLOCK].size > doc->max_nesting)
+		return;
+
+	while (beg < size) {
+		txt_data = data + beg;
+		end = size - beg;
+
+		if (is_atxheader(doc, txt_data, end))
+			beg += parse_atxheader(ob, doc, txt_data, end);
+
+		else if (data[beg] == '<' && doc->md.blockhtml &&
+				(i = parse_htmlblock(ob, doc, txt_data, end, 1)) != 0)
+			beg += i;
+
+		else if ((i = is_empty(txt_data, end)) != 0)
+			beg += i;
+
+		else if (is_hrule(txt_data, end)) {
+			if (doc->md.hrule)
+				doc->md.hrule(ob, &doc->data);
+
+			while (beg < size && data[beg] != '\n')
+				beg++;
+
+			beg++;
+		}
+
+		else if ((doc->ext_flags & HOEDOWN_EXT_FENCED_CODE) != 0 &&
+			(i = parse_fencedcode(ob, doc, txt_data, end)) != 0)
+			beg += i;
+
+		else if ((doc->ext_flags & HOEDOWN_EXT_TABLES) != 0 &&
+			(i = parse_table(ob, doc, txt_data, end)) != 0)
+			beg += i;
+
+		else if (prefix_quote(txt_data, end))
+			beg += parse_blockquote(ob, doc, txt_data, end);
+
+		else if (!(doc->ext_flags & HOEDOWN_EXT_DISABLE_INDENTED_CODE) && prefix_code(txt_data, end))
+			beg += parse_blockcode(ob, doc, txt_data, end);
+
+		else if (prefix_uli(txt_data, end))
+			beg += parse_list(ob, doc, txt_data, end, 0);
+
+		else if (prefix_oli(txt_data, end))
+			beg += parse_list(ob, doc, txt_data, end, HOEDOWN_LIST_ORDERED);
+
+		else
+			beg += parse_paragraph(ob, doc, txt_data, end);
+	}
+}
+
+/* parse_block • parsing of one block, returning next uint8_t to parse */
 static void parse_single_block(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t size)
 {
 	size_t beg, end, i;
