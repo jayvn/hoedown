@@ -9,3 +9,4 @@ smartypants
 libhoedown.so*
 libhoedown.a
 tags
+.*.swp
