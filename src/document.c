@@ -2429,8 +2429,7 @@ parse_table(
 }
 
 /* parse_block • parsing of one block, returning next uint8_t to parse */
-static void
-parse_block(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t size)
+static void parse_single_block(hoedown_buffer *ob, hoedown_document *doc, uint8_t *data, size_t size)
 {
 	size_t beg, end, i;
 	uint8_t *txt_data;
