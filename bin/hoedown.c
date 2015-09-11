@@ -435,8 +435,16 @@ int main(int argc, char **argv)
 
     t1 = clock();
     /*hoedown_document_render(document, ob, ib->data, ib->size);*/
-    while(data
-    parse_single_block(ob,document,ib->data,ib->size);
+    uint8_t *data1;
+    int *o_parsed = NULL, op, format = 0;
+    o_parsed = &op;
+    op = 0;
+    data1 = ib->data;
+
+    while (format != -1) {
+        format = parse_first_block(ob, document, data1, 100, o_parsed);
+        data1 += *o_parsed;
+    }
     t2 = clock();
 
     /* Cleanup */
